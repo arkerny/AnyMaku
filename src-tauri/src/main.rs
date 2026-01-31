@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use anymaku_lib::{websocket, window};
+use anymaku_lib::{websocket, window, application};
 use std::sync::Mutex;
 
 fn main() {
@@ -12,7 +12,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             websocket::start_server_connection,
             websocket::stop_server_connection,
-            window::set_overlay_ignore_mouse
+            window::set_overlay_ignore_mouse,
+            application::exit_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

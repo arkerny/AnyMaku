@@ -5,7 +5,7 @@
       :key="msg.id"
       class="danmaku-item"
       :style="{
-        top: (msg.trackIndex * (config.fontSize + 15) + 30) + 'px',
+        top: (msg.offsetY + msg.trackIndex * (config.fontSize + 15)) + 'px',
         fontSize: config.fontSize + 'px',
         '--duration': msg.duration + 's',
         // 动态合成阴影和描边
@@ -70,13 +70,32 @@ const generateTextStyle = () => {
 
 const getTrackIndex = () => {
   const trackHeight = config.value.fontSize + 15;
-  const maxTracks = Math.floor((window.innerHeight - 100) / trackHeight);
-  return Math.floor(Math.random() * Math.max(maxTracks, 1));
+  
+  // 1. 计算可用像素范围
+  const startY = (window.innerHeight * config.value.displayTop) / 100;
+  const endY = (window.innerHeight * config.value.displayBottom) / 100;
+  const availableHeight = endY - startY;
+
+  // 2. 计算该范围内可以容纳多少轨道
+  const maxTracksInRange = Math.floor(availableHeight / trackHeight);
+  
+  // 3. 随机分配轨道索引
+  const localTrackIndex = Math.floor(Math.random() * Math.max(maxTracksInRange, 1));
+  
+  // 4. 返回基于该区域起始位置的轨道信息
+  return {
+    index: localTrackIndex,
+    offsetY: startY // 记录该区域的起始偏移像素
+  };
 }
 
 onMounted(async () => {
   await listen('update-config', (event) => {
     config.value = { ...config.value, ...event.payload };
+  });
+
+  await listen('clear-all', () => {
+    danmuQueue.value = [];
   });
 
   await listen('new-danmaku', (event) => {
@@ -85,19 +104,36 @@ onMounted(async () => {
       try { parsedData = JSON.parse(parsedData); } catch (e) { }
     }
 
+    const trackData = getTrackIndex(); // 获取包含偏移的对象
     const id = Date.now() + Math.random();
+
+    // --- 核心计算逻辑 ---
+    // 1. 定义像素速度：将滑块的 1-100 映射为像素/秒 (例如 10 对应 200px/s)
+    const pixelSpeed = config.value.speed * 20; 
+    
+    // 2. 估算弹幕宽度 (用于更精确的路程计算)
+    // 字符数 * 字号 = 大致宽度
+    const textWidth = (parsedData.user?.length + parsedData.text?.length + 2) * config.value.fontSize;
+    
+    // 3. 计算总路程：屏幕宽度 + 弹幕宽度
+    const totalDistance = window.innerWidth + textWidth;
+    
+    // 4. 计算该弹幕需要的秒数 (时间 = 路程 / 速度)
+    const calculatedDuration = totalDistance / pixelSpeed;
+
     const newMsg = {
-      id,
+      id: id,
       user: parsedData.user || "未知用户",
-      text: parsedData.text || (typeof parsedData === 'string' ? parsedData : ""),
-      trackIndex: getTrackIndex(),
-      duration: config.value.speed + (Math.random() * 2) 
+      text: parsedData.text || "",
+      trackIndex: trackData.index,
+      offsetY: trackData.offsetY, // 新增：保存起始偏移
+      duration: calculatedDuration
     };
 
     danmuQueue.value.push(newMsg);
     setTimeout(() => {
       danmuQueue.value = danmuQueue.value.filter(m => m.id !== id);
-    }, (config.value.speed + 5) * 1000);
+    }, (calculatedDuration + 5) * 1000);
   });
 });
 </script>

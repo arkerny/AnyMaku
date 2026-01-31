@@ -1,7 +1,15 @@
 <template>
   <div class="control-container">
     <h2 class="title">AnyMaku 控制台</h2>
+
+    <div class="card">
+      <div class="flex-row">
+        <button @click="clearOverlay" class="btn secondary-btn">一键清屏</button>
+        <button @click="handleExit" class="btn danger-btn">关闭程序</button>
+      </div>
+    </div>
     
+
     <div class="card">
       <label class="section-label">WebSocket 服务地址</label>
       <div class="flex-row">
@@ -57,7 +65,22 @@
         </div>
       </div>
       </div>
+      <div class="divider"></div>
+      <label class="section-label">显示区域控制 (垂直范围)</label>
 
+      <div class="setting-item">
+        <span class="label-text">起始位置: {{ settings.displayTop }}%</span>
+        <div class="slider-container">
+          <input type="range" v-model.number="settings.displayTop" min="0" :max="settings.displayBottom" @input="syncConfig" class="slider" />
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <span class="label-text">结束位置: {{ settings.displayBottom }}%</span>
+        <div class="slider-container">
+          <input type="range" v-model.number="settings.displayBottom" :min="settings.displayTop" max="100" @input="syncConfig" class="slider" />
+        </div>
+      </div>
       <div class="divider"></div>
 
       <div class="setting-item">
@@ -111,6 +134,8 @@ const settings = reactive({
   // 彩虹色
   rainbowUser: false,
   rainbowText: false,
+  displayTop: 10,
+  displayBottom: 50
 })
 
 onMounted(async () => {
@@ -134,6 +159,21 @@ const handleConnection = async () => {
 }
 
 const syncConfig = () => emit('update-config', { ...settings });
+
+const handleExit = async () => {
+  if (confirm('确定要退出程序并关闭所有弹幕吗？')) {
+    await invoke('stop_server_connection'); // 断开 WebSocket 连接
+    await emit('clear-all'); // 触发 Overlay.vue 中的监听
+    setTimeout(async () => {
+      await invoke('exit_app'); // 需要你在 Rust 后端实现此指令
+    }, 100);
+  }
+}
+
+const clearOverlay = async () => {
+  await emit('clear-all'); // 触发 Overlay.vue 中的监听
+}
+
 </script>
 
 <style>
@@ -166,7 +206,15 @@ const syncConfig = () => emit('update-config', { ...settings });
 .styled-input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
 .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; }
 .primary-btn { background: #00aeec; color: white; }
+.primary-btn:hover { background: #33bfff; }
+.secondary-btn { 
+  background: #f0f0f0; 
+  color: #666; 
+  border: 1px solid #ddd;
+}
+.secondary-btn:hover { background: #e5e5e5; }
 .danger-btn { background: #ff4d4f; color: white; }
+.danger-btn:hover { background: #ff7875; }
 .status-text { font-size: 12px; margin-top: 8px; color: #999; }
 .status-text.online { color: #52c41a; }
 </style>

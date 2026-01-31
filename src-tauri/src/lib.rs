@@ -131,3 +131,10 @@ pub mod window {
         Ok(())
     }
 }
+
+pub mod application {
+    #[tauri::command]
+    pub fn exit_app(app_handle: tauri::AppHandle) {
+        app_handle.exit(0);
+    }
+}
