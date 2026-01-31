@@ -66,6 +66,16 @@ npm run tauri dev
 
 发起 Pull Request。
 
+**我们急需把系统通知、IM 通知等通过 Websocket 传递的中间软件（虽然 Websocket 似乎并不是适用于通知的工具）**
+
+## Todo List
+
+[ ] 修复 AI 写出来的前端 BUG
+[ ] 支持多个 Websocket 连接（考虑整合工具？）
+[ ] 添加弹幕的辅助信息比如软件来源等
+[ ] 增加根据自定义用户自定义颜色的相关工具
+[ ] 改善前端控制台布局
+
 ## 开源协议
 
 本项目采用 GPL-3.0 license 开源协议。
