@@ -70,6 +70,7 @@ npm run tauri dev
 
 ## Todo List
 
+[ ] 优化 Websocket 链接鲁棒性
 [ ] 修复 AI 写出来的前端 BUG
 [ ] 支持多个 Websocket 连接（考虑整合工具？）
 [ ] 添加弹幕的辅助信息比如软件来源等
