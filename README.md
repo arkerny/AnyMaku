@@ -1,10 +1,6 @@
 # AnyMaku
 
----
-
 **Danmaku Anywhere**
-
----
 
 ## 项目简介
 
