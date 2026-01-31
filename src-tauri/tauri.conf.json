@@ -14,7 +14,9 @@
       {
         "label": "main",
         "url": "/", 
-        "title": "AnyMaku Console"
+        "title": "AnyMaku Console",
+        "height": 1000,
+        "width": 800
       },
       {
         "label": "overlay",
@@ -27,7 +29,8 @@
         "resizable": false,
         "maximized": true,
         "shadow": false,
-        "focus": false
+        "focus": false,
+        "skipTaskbar": true
       }
     ],
     "security": {
