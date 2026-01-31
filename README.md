@@ -12,6 +12,14 @@ AnyMaku 是一个旨在实现“随处弹幕（Danmaku Anywhere）”的桌面�
 - 编程语言: TypeScript 与 Rust
 - 构建工具: Vite 与 Node.js
 
+## 项目截图
+
+![控制台](https://github.com/arkerny/AnyMaku/blob/main/imgs/Snipaste_2026-01-31_23-03-51.png?raw=true)
+
+![效果 1](https://github.com/arkerny/AnyMaku/blob/main/imgs/Snipaste_2026-01-31_23-05-33.png?raw=true)
+
+![效果 2](https://github.com/arkerny/AnyMaku/blob/main/imgs/Snipaste_2026-01-31_23-06-15.png?raw=true)
+
 ## 项目结构
 
 项目主要代码分布如下：
