@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "anymaku",
+  "version": "0.1.0",
+  "identifier": "com.arkerny.anymaku",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "url": "/", 
+        "title": "AnyMaku Console"
+      },
+      {
+        "label": "overlay",
+        "url": "/overlay", 
+        "title": "Danmaku", 
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "fullscreen": false,
+        "resizable": false,
+        "maximized": true,
+        "shadow": false,
+        "focus": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },  
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}
