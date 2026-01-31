@@ -26,24 +26,30 @@ pub mod websocket {
         url: String,
         state: State<'_, ConnectionState> 
     ) -> Result<(), String> {
-        // --- 1. 防止重复连接 ---
+        // --- 防止重复连接 ---
         let mut token_lock = state.token.lock().unwrap();
         if let Some(old_token) = token_lock.take() {
+            info!(target: "websocket", "已有连接，正在断开旧连接...");
             old_token.cancel(); // 如果已有连接，先关掉它
         }
 
-        // --- 2. 创建并存储新令牌 ---
+        // --- 创建并存储新令牌 ---
         let token = CancellationToken::new();
         let cloned_token = token.clone();
         *token_lock = Some(token);
         drop(token_lock); // 释放锁，避免阻塞异步任务
 
-        // --- 3. 启动后台任务 ---
+        // --- 启动后台任务 ---
         tokio::spawn(async move {
             let ws_result = connect_async(&url).await;
             let (ws_stream, _) = match ws_result {
-                Ok(val) => val,
+                Ok(val) => {
+                    info!(target: "websocket", "成功连接到服务器: {}", url);
+                    let _ = window.emit("connection-succeed", "已连接到服务器");
+                    val
+                },
                 Err(e) => {
+                    error!(target: "websocket", "连接失败: {}", e);
                     let _ = window.emit("connection-failed", e.to_string());
                     return;
                 }
@@ -53,8 +59,9 @@ pub mod websocket {
 
             loop {
                 tokio::select! {
-                    // 关键点：监听手动取消信号
+                    // 监听手动取消信号
                     _ = cloned_token.cancelled() => {
+                        info!(target: "websocket", "连接被手动取消: {}", url);
                         break; 
                     }
                     // 监听 WebSocket 消息
@@ -63,7 +70,8 @@ pub mod websocket {
                             Some(Ok(message)) => {
                                 if let Ok(raw_text) = message.into_text() {
                                     if let Ok(parsed) = serde_json::from_str::<Danmaku>(&raw_text) {
-                                        let _ = window.emit("new-danmaku", parsed);
+                                        let _ = window.emit("new-danmaku", parsed.clone());
+                                        info!(target: "websocket", "收到弹幕: {}", parsed.text);
                                     }
                                 }
                             }
@@ -73,6 +81,7 @@ pub mod websocket {
                 }
             }
             let _ = window.emit("connection-closed", "已断开连接");
+            info!(target: "websocket", "连接已关闭: {}", url);
         });
 
         Ok(())
@@ -83,7 +92,10 @@ pub mod websocket {
         // 触发令牌，通知上面的 loop 停止
         let mut token_lock = state.token.lock().unwrap();
         if let Some(token) = token_lock.take() {
+            info!(target: "websocket", "正在断开连接...");
             token.cancel();
+            // 发送取消信号后再输出一条日志确认
+            info!(target: "websocket", "已成功发送取消信号，连接将关闭");
             Ok(())
         } else {
             Err("当前没有活跃的连接".into())
@@ -102,9 +114,9 @@ pub mod window {
     ) -> Result<(), String> {
         let window = app.get_webview_window("overlay")
             .ok_or_else(|| {
-                let err = "Window 'overlay' not found".to_string();
-                error!("{}", err);
-                err
+                let err_msg = "Window 'overlay' not found".to_string();
+                error!("{}", err_msg);
+                err_msg
             })?;
 
         window.set_ignore_cursor_events(ignore)
